@@ -14,8 +14,19 @@
             rel="stylesheet"
             href="path/to/font-awesome/css/font-awesome.min.css"
         />
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://kit.fontawesome.com/526e3dd711.js"
+            crossorigin="anonymous"
+        ></script>
+        <script src="js/index.ts" type="module" defer></script>
     </head>
-    <body>
+    <!-- Editor's note:  -->
+    <body class="m-0 d-flex flex-column align-items-stretch" style="height: 100vh">
         <nav class="navbar border-bottom" data-bs-theme="light">
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1"
@@ -23,55 +34,58 @@
                 >
             </div>
         </nav>
-        <div class="container-fluid">
-            <div class="row row-cols">
-                <div class="col m-3 min-vh-100">
+        <div class="container-fluid d-flex flex-row flex-fill">
+            <div class="d-flex flex-rows">
+                <div class="col m-3 d-flex flex-column">
                     <span class="row mb-3 h4">Graph Definition</span>
-                    <span class="row mb-3 p"
-                        >Define below the nodes, edges, and weight of the graph.
+                    <span class="row mb-3 p">
+                        Define below the nodes, edges, and weight of the graph.
                         Once done click "Run Dijkstra" and the output will be
-                        presented at the screen ahead.</span
-                    >
-                    <form id="graphform">
-                        <div id="nodelist" class="align-self-stretch">
-                            <div class="row row-cols-4 mb-3" id="row">
-                                <div class="col">
-                                    <label for="startnode">Start Node</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        name="startnode"
-                                        required
-                                    />
+                        presented at the screen ahead.
+                    </span>
+                    <form id="graphform" class="d-flex flex-column flex-fill">
+                        <div id="nodelist" class="align-self-stretch flex-fill">
+                            <div class="nodelist-nodes">
+                                <div class="row row-cols-4 mb-3" id="row">
+                                    <div class="col">
+                                        <label for="startnode">Start Node</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            name="startnode"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="col">
+                                        <label for="endnode">End Node</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            name="endnode"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="col">
+                                        <label for="weight">Weight</label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            name="weight"
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <div class="col">
-                                    <label for="endnode">End Node</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        name="endnode"
-                                        required
-                                    />
-                                </div>
-                                <div class="col">
-                                    <label for="weight">Weight</label>
-                                    <input
-                                        type="number"
-                                        class="form-control"
-                                        name="weight"
-                                        required
-                                    />
-                                </div>
+                                
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <button
-                                type="button"
-                                class="btn btn-light"
-                                onclick="addFormRow()"
-                            >
-                                Add New Edge
-                            </button>
+                            <div class="mb-3">
+                                <button
+                                    type="button"
+                                    class="btn btn-light"
+                                    id="addrow"
+                                    >
+                                    Add New Edge
+                                </button>
+                            </div>
                         </div>
                         <div class="row row-cols-4">
                             <div class="col">
@@ -93,36 +107,28 @@
                 </div>
 
                 <div class="col border-start" data-bs-theme="light">
-                    <div class="container-fliud m-3">
+                    <div class="container-fliud m-3 d-flex flex-column">
                         <span class="row mb-3 h4">Output</span>
-                        <div id="mediacontainer" class="row border mb-3"></div>
-                        <div class="row">
-                            <span class="row mb-3 h5">Path</span>
-                            <div id="terminal" class="mb-3"></div>
+                        <div id="mediacontainer" class="row border mb-3 flex-fill" image="0">
+                            HELLO
                         </div>
                         <div class="row row-cols-3">
-                            <div class="btn-group p-0" role="group">
-                                <button type="button" class="btn btn-primary">
+                            <div class="btn-group p-0 mb-3" role="group">
+                                <button type="button" id="previous" class="btn btn-primary">
                                     Previous
                                 </button>
-                                <button type="button" class="btn btn-primary">
+                                <button type="button" id="next" class="btn btn-primary">
                                     Next
                                 </button>
                             </div>
+                        </div>
+                        <div class="row">
+                            <span class="row mb-3 h5">Path</span>
+                            <div id="terminal" class="mb-3"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"
-        ></script>
-        <script
-            src="https://kit.fontawesome.com/526e3dd711.js"
-            crossorigin="anonymous"
-        ></script>
-        <script src="js/index.js" type="module" defer></script>
     </body>
 </html>

@@ -1,2 +1,15 @@
-# dijkstra-visualizer
-A simple html-css-js program that visualize the simulation of Dijikstra's algorithm.
+# 🚀 Welcome to your new awesome project!
+
+This project has been created using **webpack-cli**, you can now run
+
+```
+npm run build
+```
+
+or
+
+```
+yarn build
+```
+
+to bundle your application

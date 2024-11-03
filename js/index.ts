@@ -1,8 +1,16 @@
-import {instance} from "@viz-js/viz";
+import { instance } from "@viz-js/viz";
+
+type Vertices = { [key: string]: number };
+
 let counter = 0;
 
 
-const createFieldColumn = (inputName: string, labelInnerText:string, inputType:string, suffix: string) => {
+const createFieldColumn = (
+    inputName: string,
+    labelInnerText: string,
+    inputType: string,
+    suffix: string,
+) => {
     const column = document.createElement("div");
     column.classList.add("col");
 
@@ -11,7 +19,7 @@ const createFieldColumn = (inputName: string, labelInnerText:string, inputType:s
     label.setAttribute("for",`${name}${suffix}`);
 
     const input = document.createElement("input");
-    input.type = "text";
+    input.type = inputType;
     input.classList.add("form-control");
     input.required = true;
     input.name = inputName+suffix;
@@ -45,7 +53,7 @@ const addFormRow = () => {
 
     row.append(startcol,endcol,weightcol,deletecol);
 
-    document.getElementById("nodelist")?.appendChild(row);
+    document.getElementById("nodelist")?.querySelector(".nodelist-nodes").appendChild(row);
     counter+=1;
 }
 
@@ -55,7 +63,12 @@ const removeFormRow = (id: string) => {
     row?.remove();
 }
 
-const dijkstra = (edges: any[][], vertices: object, source: number) => {
+const dijkstra = (
+    edges: any[][],
+    vertices: Vertices,
+    source: number,
+    dot_graph: string[]
+) => {
 
     const distance: number[] = [];
     const previous: any[] = [];
@@ -69,34 +82,49 @@ const dijkstra = (edges: any[][], vertices: object, source: number) => {
 
     distance[source] = 0;
 
+    const visited_vertices: [vertex: number, color:string, style:string][] = [];
+    const visited_edges: [[start:number,end:number],color:string][] = [];
+
+
     while(queue.length != 0) {
-        // search queue for shortest distance
         const u = queue.reduce((node,min)=> distance[node] < distance[min] ? node : min);
         queue.splice(queue.indexOf(u),1);
+        visited_vertices.push([u,"lightgray",""]);
 
         const neighbors = queue.filter((v)=> edges[u][v]);
+        //TODO:
+
+        let chosenvertex: number = 0;
         neighbors.forEach((v) => {
+
             const alt = distance[u] + edges[u][v];
             if (alt<distance[v]) {
                 distance[v] = alt;
                 previous[v] = u;
+                visited_edges.push([[u,v],"blue"]);
             }
         })
+
+        visited_vertices[visited_vertices.length - 1][1] = "green";
+        visited_vertices[visited_vertices.length - 1][2] = "filled";
+        visited_edges[visited_edges.length - 1][1] = "green";
+
+
+        dot_graph.push(createGraph(edges, vertices,visited_vertices,visited_edges));
+
     }
     const terminal = document.getElementById("terminal");
-    
+    terminal.innerHTML = '';
     distance.forEach((distance,index)=> {
         terminal!.innerHTML+=`<span class="row p">${Object.keys(vertices).find(k=>vertices[k as keyof object]==index)}: ${distance}</span>`
     }
     );
-    terminal!.innerHTML+=`<span class="row p">Paths:</span>`
+    terminal!.innerHTML += `<span class="row p">Paths:</span>`;
     console.log(previous);
     previous.forEach(((prev_node,index)=>{
         terminal!.innerHTML+=`<span class="row p">${Object.keys(vertices).find(k=>vertices[k as keyof object]==index)}: ${printPath(`${index}`, previous, vertices)}</span>`
     }));
 }
-
-
 
 const printPath = (target: string, previous: string[], vertices:object):string => {
     if (target == undefined) {
@@ -106,28 +134,116 @@ const printPath = (target: string, previous: string[], vertices:object):string =
     }
 }
 
-const createGraph = (edges: number[][], vertices: object, highlight: object) => {
+
+/**
+ * @param { number[][] } edges - the adjacency matrix of the graph.
+ * @param { Vertices } vertices - the vertices of the graph.
+ * @param { number[] } highlightVertex - the list of nodes / vertices that needs to be colored.
+ * @param { [number, number][] } highlightEdges - the list of edges that needs to be colored.
+ * @returns { void }
+ */
+const createGraph = (
+    edges: number[][],
+    vertices: Vertices,
+    highlightVertex: [vertex: number, color: string, style: string][],
+    highlightEdges: [edge: [number, number], color: string][],
+) => {
     const render_string: string[] = [
         "graph G{",
     ];
-    // A:1
+    
+    Object.keys(vertices).forEach((value) => {
+        const id = vertices[value];
 
-    Object.keys(vertices).forEach((value)=>{
-        render_string.push(`${vertices[value as keyof object]}[shape=circle label=${value}]`);
+        let shouldBeHighlighted: boolean = false;
+        let color: string | null = null;
+        let style: string | null = null;
+        for (const [vertex, chosenColor, chosenStyle] of highlightVertex) {
+            if (vertex == id) {
+                shouldBeHighlighted = true;
+                color = chosenColor;
+                style = chosenStyle;
+                break;
+            }
+        }
+
+        const message = `${id}[shape=circle label=${value}`
+            + (shouldBeHighlighted ? ` color="${color}" style="${style}"` : ``)
+            + ']';
+        
+        render_string.push(message);
     });
 
-
+    // added :: number -> number -> boolean
+    const added: {[key: number]: {[key: number]: boolean}} = {};
     edges.forEach((row, startnode)=>{
-        row.forEach((node, endnode)=> {
-            if (edges[startnode][endnode]) {
-                render_string.push(`${startnode}--${endnode}[label=${edges[startnode][endnode]}]`);
+        row.forEach((node, endnode) => {
+            const weight = edges[startnode][endnode];
+
+            let shouldBeHighlighted: boolean = false;
+            let color: string | null = null;
+            for (const [edge, chosenColor] of highlightEdges) {
+                if (edge[0] == startnode && edge[1] == endnode ||
+                    edge[0] == endnode && edge[1] == startnode) {
+                    shouldBeHighlighted = true;
+                    color = chosenColor;
+                    break;
+                }
+            }
+
+            // [hasBeenAdded] is necessary as the symmetric nature of the adjacency matrix
+            // would cause [a -- b ; b -- a] duplication.
+            const hasBeenAdded = added[startnode]?.[endnode] || added[endnode]?.[startnode];
+            if (!hasBeenAdded && weight) {
+                render_string.push(`${startnode}--${endnode}[label=${weight}`
+                    + (shouldBeHighlighted ? ` color=${color}` : ``)
+                    + `]`);
+                
+                (added[startnode] ??= {})[endnode] = true;
+                (added[endnode] ??= {})[startnode] = true;
             }
         });
     });
 
     render_string.push("}");
+
+    console.log(render_string.join("\n"));
     return render_string.join("\n");
 }
+
+let step = 0;
+
+document.getElementById("addrow")?.addEventListener("click", addFormRow);
+
+document.getElementById("previous")?.addEventListener("click", () => {
+    step -= 1;
+
+    const previousSvg = document.getElementById(`svg-${step + 1}`);
+    if (previousSvg != undefined) {
+        previousSvg.classList.add("d-none");
+    }
+    
+    const activeSvg = document.getElementById(`svg-${step}`);
+    if (activeSvg != undefined) {
+        activeSvg.classList.remove("d-none");
+    }
+    
+});
+
+document.getElementById("next")?.addEventListener("click", () => {
+    step += 1;
+
+    const previousSvg = document.getElementById(`svg-${step - 1}`);
+    if (previousSvg != undefined) {
+        previousSvg.classList.add("d-none");
+    }
+    
+    const activeSvg = document.getElementById(`svg-${step}`);
+    if (activeSvg != undefined) {
+        activeSvg.classList.remove("d-none");
+    }
+    
+});
 
 document.getElementById("graphform")?.addEventListener("submit", function(event) {
     event.preventDefault();
@@ -155,15 +271,30 @@ document.getElementById("graphform")?.addEventListener("submit", function(event)
         const weight = parseInt((row.querySelector(`input[name^="weight"`) as HTMLInputElement)?.value);
 
         edges[vertices[startNode]][vertices[endNode]] = weight;
+        edges[vertices[endNode]][vertices[startNode]] = weight; // symmetric dapat
     });
 
     const source = vertices[((document.getElementById("sourcenode") as HTMLInputElement)?.value)];
-    dot_graphs.push(createGraph(edges,vertices, {}));
-    dijkstra(edges, vertices, source);
+
+    /// 
+    dot_graphs.push(createGraph(edges, vertices, [], []));
+    dijkstra(edges, vertices, source, dot_graphs);
 
     const mediacontainer = document.getElementById("mediacontainer");
+    mediacontainer.innerHTML = '';
+    const imageid = parseInt(mediacontainer.getAttribute("image"));
     instance().then(viz => {
-        const svg = viz.renderSVGElement("digraph { a -> b }");
-        document.getElementById("media")!.appendChild(svg);
+        for (let i = 0; i < dot_graphs.length; ++i) {
+            const dot = dot_graphs[i];
+            const svg = viz.renderSVGElement(dot);
+            const holder = document.createElement("div");
+            holder.id = `svg-${i}`;
+            holder.classList.add("d-none","child");
+            holder.appendChild(svg);            
+            mediacontainer.appendChild(holder);
+        }
+
+        const firstSvg = document.getElementById(`svg-0`);
+        firstSvg.classList.remove("d-none");
     });
 });
