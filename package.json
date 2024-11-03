@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.8.6"
+  },
+  "dependencies": {
+    "@viz-js/viz": "^3.10.0"
+  }
+}
