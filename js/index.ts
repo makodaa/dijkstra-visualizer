@@ -83,13 +83,13 @@ const dijkstra = (
     distance[source] = 0;
 
     const visited_vertices: [vertex: number, color:string, style:string][] = [];
-    const visited_edges: [[start:number,end:number],color:string][] = [];
-
-
+    
+    
     while(queue.length != 0) {
+        const visited_edges: [[start:number,end:number],color:string][] = [];
         const u = queue.reduce((node,min)=> distance[node] < distance[min] ? node : min);
         queue.splice(queue.indexOf(u),1);
-        visited_vertices.push([u,"lightgray",""]);
+        visited_vertices.push([u,"lightgray","filled"]);
 
         const neighbors = queue.filter((v)=> edges[u][v]);
         //TODO:
@@ -97,6 +97,7 @@ const dijkstra = (
         let chosenvertex: number = 0;
         neighbors.forEach((v) => {
 
+            // 
             const alt = distance[u] + edges[u][v];
             if (alt<distance[v]) {
                 distance[v] = alt;
@@ -104,11 +105,6 @@ const dijkstra = (
                 visited_edges.push([[u,v],"blue"]);
             }
         })
-
-        visited_vertices[visited_vertices.length - 1][1] = "green";
-        visited_vertices[visited_vertices.length - 1][2] = "filled";
-        visited_edges[visited_edges.length - 1][1] = "green";
-
 
         dot_graph.push(createGraph(edges, vertices,visited_vertices,visited_edges));
 
